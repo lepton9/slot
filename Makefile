@@ -3,18 +3,18 @@ BIN := ./bin
 OBJS := ./objs
 INC := -I ./include
 FLAGS := -c $(INC)
-CC := g++
+CC := gcc
 
 OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o
 
 slot: $(OBJ)
-	$(CC) $^ -o $(BIN)/$@
+	$(CC) $^ -o $(BIN)/$@ -lm
 
-$(OBJS)/%.o: $(SRC)/%.cpp
+$(OBJS)/%.o: $(SRC)/%.c
 	$(CC) $(FLAGS) $< -o $@
 
 debug:
-	$(CC) $(INC) $(SRC)/*.cpp -pthread -g -o $(BIN)/db
+	$(CC) $(INC) $(SRC)/*.c -pthread -g -o $(BIN)/db
 	gdb -tui $(BIN)/db
 
 clean:

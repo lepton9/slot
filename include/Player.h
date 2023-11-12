@@ -2,12 +2,11 @@
 #define PLAYER_H
 
 
-class Player {
-  public:
-    Player(double bal);
+typedef struct {
+  double balance;
+} Player;
 
-  private:
-    double balance;
-};
+Player* initPlayer(double bal);
+void freePlayer(Player* p);
 
 #endif

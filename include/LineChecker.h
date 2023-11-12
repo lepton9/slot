@@ -1,9 +1,9 @@
 #ifndef LINECHECKER_H
 #define LINECHECKER_H
 
-class LineChecker {
+typedef struct {
 
-};
+} LineChecker;
 
 #endif
 

@@ -1,6 +1,10 @@
 #include "../include/AliasTable.h"
+#include <assert.h>
+#include <math.h>
+#include <time.h>
+#include <stdio.h>
 
-// p represents the probabilities
+// p represents the probabilities of n elements
 AliasTable* initialize(double* p, size_t n) {
   if (n <= 0) return NULL;
   srand (time(NULL));
@@ -58,12 +62,18 @@ AliasTable* initialize(double* p, size_t n) {
   return t;
 }
 
+void freeAlias(AliasTable* at) {
+  free(at->prob);
+  free(at->alias);
+  free(at);
+}
+
 double drand (double s, double e) {
     return ((double)rand() * (e - s)) / (double)RAND_MAX + s;
 }
 
 int randAlias(AliasTable* at) {
-  if (at->n <= 0) return -1;
+  if (at == NULL || at->n <= 0) return -1;
 
   double u = drand(0, at->n);
   int j = floor(u);
@@ -72,4 +82,38 @@ int randAlias(AliasTable* at) {
   return at->alias[j];
 }
 
+/**
+int main() {
+  size_t size = 10000;
+  double p[3] = {0.50, 0.15, 0.35};
+  AliasTable* at;
+  at = initialize(p, sizeof(p)/sizeof(double));
+  int a = 0; 
+  int b = 0; 
+  int c = 0;
+  
+  int ind;
+  for (int i = 0; i < size; i++) {
+    ind = randAlias(at);
+    switch (ind) {
+      case 0:
+        a++;
+        break;
+      case 1:
+        b++;
+        break;
+      case 2:
+        c++;
+        break;
+      default:
+        assert(ind > 0);
+        break;
+    }
+  }
 
+  printf("a: %d, b: %d, c: %d\n", a,b,c);
+  freeAlias(at);
+
+  return 0;
+}
+**/

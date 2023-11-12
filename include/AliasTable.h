@@ -1,10 +1,7 @@
 #ifndef ALIASTABLE_H
 #define ALIASTABLE_H
 
-#include <string.h>
 #include <stdlib.h>
-#include <math.h>
-#include <time.h>
 
 typedef struct {
   size_t n;
@@ -15,5 +12,6 @@ typedef struct {
 AliasTable* initialize(double* p, size_t n);
 int randAlias(AliasTable* at);
 double drand (double s, double e);
+void freeAlias(AliasTable* at);
 
 #endif
