@@ -11,16 +11,7 @@
 typedef struct {
   char s;
   int color;
-} symbol;
-
-/**
-typedef struct {
-  char c;
-  int colorGroup;
-  bool visited;
-  bool inGroup;
-} symb;
-**/
+} symbolTemplate;
 
 enum groupColors {
   Red = 31, Green, Yellow, Blue, Magenta, Cyan, White
@@ -42,9 +33,8 @@ typedef struct {
   LineChecker* check;
   Renderer* render;
   AliasTable* alias;
-  char** slotGrid;
-  //symb** slotGrid;
-  symbol symbols[5];
+  symbol** slotGrid;
+  symbolTemplate allSymbols[5];
   double prob[5];
   int w,h;
   int bonusSymbols;
@@ -60,7 +50,8 @@ void spin(Slot* s);
 void spinColumn(Slot* s, int column);
 void animateSpin(Slot* s);
 void animateColumn(Slot* s, int column);
-char getRandomSymbol(Slot* s);
+symbolTemplate getRandomSymbolTemplate(Slot* s);
+symbol getRandomSymbol(Slot* s);
 void columnDown(Slot* s, int column);
 char* getSymbColor(Slot* s, char symb);
 void highlightGroups(Slot* s, groups* grps);

@@ -1,16 +1,16 @@
 #include "../include/Renderer.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 
-
-void renderGrid(FILE* s, char** grid, int w, int h) {
+void renderGrid(FILE* s, symbol** grid, int w, int h) {
   assert(w*h*2 < 512);
   char op[512] = "";
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      char c[2] = {grid[i][j], '\0'};
+      char c[2] = {grid[i][j].c, '\0'};
       strcat(op, c);
       strcat(op, " ");
     }
@@ -22,5 +22,6 @@ void renderGrid(FILE* s, char** grid, int w, int h) {
 
 void render(FILE* s, const char* str) {
   fprintf(s, "%s", str);
+  fflush(s);
 }
 

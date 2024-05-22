@@ -1,9 +1,10 @@
 #include "../include/LineChecker.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
-#define MIN_GROUP_SIZE 1
+#define MIN_GROUP_SIZE 3
 
 
 group* initGroup() {
@@ -36,19 +37,20 @@ void addToGroups(groups* grps, group* g) {
   grps->groups[grps->n++] = g;
 }
 
-void findGroup(char** grid, bool** visited, group* g, const int w, const int h, const int i, const int j) {
-  if (g->symb < 0) memcpy(&(g->symb), &(grid[i][j]), sizeof(char));
-  if (i >= w || j >= h || i < 0 || j < 0 || visited[i][j] || grid[i][j] != g->symb) return;
-  visited[i][j] = true;
+void findGroup(symbol** grid, bool** visited, group* curGrp, const int w, const int h, const int i, const int j) {
+  if (i >= w || j >= h || i < 0 || j < 0 || visited[i][j] || grid[i][j].inGroup || grid[i][j].c != curGrp->symb) return;
   cell c = {i,j};
-  addToGroup(g, c);
-  findGroup(grid, visited, g, w, h, i+1 ,j);
-  findGroup(grid, visited, g, w, h, i ,j+1);
-  findGroup(grid, visited, g, w, h, i-1 ,j);
-  findGroup(grid, visited, g, w, h, i ,j-1);
+  addToGroup(curGrp, c);
+  grid[i][j].inGroup = true;
+  visited[i][j] = true;
+
+  findGroup(grid, visited, curGrp, w, h, i+1, j  );
+  findGroup(grid, visited, curGrp, w, h, i  , j+1);
+  findGroup(grid, visited, curGrp, w, h, i-1, j  );
+  findGroup(grid, visited, curGrp, w, h, i  , j-1);
 }
 
-groups* findGroups(char** grid, const int w, const int h) {
+groups* findGroups(symbol** grid, const int w, const int h) {
   bool** visited = (bool**)malloc(h*sizeof(bool*));
   for (int i = 0; i < h; i++) {
     visited[i] = (bool*)malloc(w*sizeof(bool));
@@ -60,71 +62,41 @@ groups* findGroups(char** grid, const int w, const int h) {
   groups* grps = initGroups();
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      if (visited[i][j]) continue;
+      if (grid[i][j].inGroup || visited[i][j]) continue;
       group* g = initGroup();
-      //g->symb = grid[i][j];
+      memcpy(&(g->symb), &(grid[i][j].c), sizeof(char));
       findGroup(grid, visited, g, w, h, i, j);
-      if (g->n < MIN_GROUP_SIZE) free(g);
+      if (g->n < MIN_GROUP_SIZE){
+        for (int i = 0; i < g->n; i++) grid[g->cells[i].x][g->cells[i].y].inGroup = false;
+        free(g);
+      }
       else addToGroups(grps, g);
+      //visited[i][j] = true;
     }
   }
+  for (int i = 0; i < h; i++) free(visited[i]);
+  free(visited);
+
   return grps;
 }
 
 
 
-// Start of new implementation
-// Have to change the grid to be symbol** and not just char**
 
-void findGroupNew(symb** grid, group* curGrp, const int w, const int h, const int i, const int j) {
-  if (i >= w || j >= h || i < 0 || j < 0 || grid[i][j].visited || grid[i][j].inGroup || grid[i][j].c != curGrp->symb) return;
-  if (curGrp->symb < 0) memcpy(&(curGrp->symb), &(grid[i][j].c), sizeof(char));
-  cell c = {i,j};
-  addToGroup(curGrp, c);
-  grid[i][j].inGroup = true;
-  grid[i][j].visited = true;
-
-  findGroupNew(grid, curGrp, w, h, i+1, j  );
-  findGroupNew(grid, curGrp, w, h, i  , j+1);
-  findGroupNew(grid, curGrp, w, h, i-1, j  );
-  findGroupNew(grid, curGrp, w, h, i  , j-1);
-}
-
-groups* findGroupsNew(symb** grid, const int w, const int h) {
-
-  groups* grps = initGroups();
-  for (int i = 0; i < h; i++) {
-    for (int j = 0; j < w; j++) {
-      if (grid[i][j].inGroup || grid[i][j].visited) continue;
-      group* g = initGroup();
-      //g->symb = grid[i][j];
-      findGroupNew(grid, g, w, h, i, j);
-      if (g->n < MIN_GROUP_SIZE) free(g);
-      else addToGroups(grps, g);
-      grid[i][j].visited = true;
-    }
-  }
-  return grps;
-
-}
-
-
-
-
-int countSymbols(char** grid, int w, int h, char symbol) {
+int countSymbols(symbol** grid, int w, int h, char symbol) {
   int sum = 0;
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      sum += (grid[i][j] == symbol) ? 1 : 0;
+      sum += (grid[i][j].c == symbol) ? 1 : 0;
     }
   }
   return sum;
 }
 
-int countSymbolsCol(char** grid, int h, int column, char symbol) {
+int countSymbolsCol(symbol** grid, int h, int column, char symbol) {
   int sum = 0;
   for (int i = 0; i < h; i++) {
-      sum += (grid[i][column] == symbol) ? 1 : 0;
+      sum += (grid[i][column].c == symbol) ? 1 : 0;
   }
   return sum;
 }

@@ -60,22 +60,20 @@ void columnDown(Slot* s, int column) {
   s->slotGrid[0][column] = getRandomSymbol(s);
 }
 
-char getRandomSymbol(Slot* s) {
+symbolTemplate getRandomSymbolTemplate(Slot* s) {
   int i = randAlias(s->alias);
   assert(i >= 0);
-  return s->symbols[i].s;
-  //return s->symbols[i];
+  return s->allSymbols[i];
 }
-/**
+
 symbol getRandomSymbol(Slot* s) {
-  int i = randAlias(s->alias);
-  assert(i >= 0);
-  return s->symbols[i];
+  symbolTemplate st = getRandomSymbolTemplate(s);
+  symbol symb = (symbol){st.s, st.color, 0};
+  return symb;
 }
-**/
 
 void checkProb(Slot* s) {
-  assert(sizeof(s->prob)/sizeof(s->prob[0]) == sizeof(s->symbols)/sizeof(s->symbols[0]));
+  assert(sizeof(s->prob)/sizeof(s->prob[0]) == sizeof(s->allSymbols)/sizeof(s->allSymbols[0]));
 
   double sum = 0;
   for (int i = 0; i < sizeof(s->prob)/sizeof(s->prob[0]); i++) {
@@ -85,23 +83,20 @@ void checkProb(Slot* s) {
 }
 
 void initSlot(Slot* s, int w, int h) {
-  s->slotGrid = (char**)malloc(h * sizeof(char*)); 
-  //s->slotGrid = (symb**)malloc(h * sizeof(symb*)); 
+  s->slotGrid = (symbol**)malloc(h * sizeof(symbol*)); 
   s->w = w;
   s->h = h;
   s->bonusSymbols = 0;
   s->bonus = false;
   for (int i = 0; i < h; i++) {
-    s->slotGrid[i] = (char*)malloc(w * sizeof(char)); 
-    //s->slotGrid[i] = (symb*)malloc(w * sizeof(symb)); 
+    s->slotGrid[i] = (symbol*)malloc(w * sizeof(symbol)); 
     for (int j = 0; j < w; j++) {
-      //s->slotGrid[i][j] = (symb){'#', 33, 0, 0};
-      s->slotGrid[i][j] = '#';
+      s->slotGrid[i][j] = (symbol){'#', 33, 0};
     }
   }
 
-  symbol smbs[5] = {{'B', 31}, {'W', 32}, {'#', 33}, {'&', 34}, {'*', 35}};
-  memcpy(s->symbols, smbs, sizeof(smbs));
+  symbolTemplate smbs[5] = {{'B', 31}, {'W', 32}, {'#', 33}, {'&', 34}, {'*', 35}};
+  memcpy(s->allSymbols, smbs, sizeof(smbs));
 
   //char sym[5] = {'B', 'W', '#', '&', '*'};
   double p[5] = {0.01, 0.2, 0.3, 0.25, 0.4};
@@ -130,7 +125,7 @@ char* getSymbColor(Slot* s, char symb) {
   int nSymb = 5;
   char* c = malloc(sizeof(char));
   for (int i = 0; i < nSymb; i++) {
-    if (s->symbols[i].s == symb) c = (char*)(&s->symbols[i].color);
+    if (s->allSymbols[i].s == symb) c = (char*)(&s->allSymbols[i].color);
   }
   return c;
 }
@@ -147,30 +142,24 @@ void insertToStr(char* str, char* insert, int index) {
 }
 
 void highlightGroups(Slot* s, groups* grps) {
-  size_t sizeOfSymb = sizeof(char) + sizeof("\033[00;42m") + sizeof("\033[0m ");
-  char* buffer = (char*)malloc(sizeOfSymb);
-  //buffer = "\0";
+  size_t sizeOfSymb = strlen("\033[00;40m") + sizeof(char) + strlen("\033[0m ");
+  char* buffer = (char*)malloc(sizeOfSymb * s->w * s->h + s->h * sizeof('\n'));
+  buffer[0] = '\0';
+  cls();
 
-  for (int i = 0; i < grps->n; i++) {
-    char symb = grps->groups[i]->symb;
-    for (int j = 0; j < grps->groups[i]->n; j++) {
-      //buffer[i][j] = '\033[' + getSymbColor(s, symb) + ';42m';
-      // Buffer, replace at specific index calculated by the lenght of the chars
-      
-      /**
-      char* sc = getSymbColor(s, symb);
-      printf("%d", *sc);
-      strcat(buffer, "\033[");
-      strcat(buffer, sc);
-      strcat(buffer, ";42m");
-      strcat(buffer, &symb);
+  for (int i = 0; i < s->h; i++) {
+    for (int j = 0; j < s->w; j++) {
+      char color[12];
+      symbol symb = s->slotGrid[i][j];
+      if (symb.inGroup || symb.c == B) sprintf(color, "\033[%d;40m", s->slotGrid[i][j].colorGroup);
+      else sprintf(color, "\033[%d;40m", 37);
+      strcat(buffer, color);
+      strncat(buffer, &(symb.c), 1);
       strcat(buffer, "\033[0m ");
-      **/
-
-      // Make either slotgrid or grps use the symbol struct instead of the basic chars
     }
     strcat(buffer, "\n");
   }
+
   render(stdout, buffer);
   free(buffer);
 }
@@ -194,7 +183,7 @@ void keyPress(Slot* s) {
       groups* grps = findGroups(s->slotGrid, s->w, s->h);
 
       // Highlight groups
-      //highlightGroups(s, grps);
+      highlightGroups(s, grps);
 
       freeGroups(grps);
     }

@@ -1,11 +1,9 @@
 DONE:
-- fix running in main
+- fixed highlightGroups
 
 TODO:
 
-- seg fault int highlightGroups int free()
-- flush the output
-- fix corrupted size in keyPress when going to LineChecker
+- make wild ('w') be in any group
 - make every column to the right spin from the current column
 - make buffer for output and make updating more efficient
 - free memory for Slot, aliastable and other when exiting
