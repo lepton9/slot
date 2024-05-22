@@ -1,10 +1,17 @@
 DONE:
-- animate the spins
-- testSuite
-- running tests work
-- Tests for LineChecker and AliasTable
+- fix running in main
 
 TODO:
+
+- seg fault int highlightGroups int free()
+- flush the output
+- fix corrupted size in keyPress when going to LineChecker
+- make every column to the right spin from the current column
+- make buffer for output and make updating more efficient
+- free memory for Slot, aliastable and other when exiting
+- fix keyboard input
+- tests for Slot.c Slot_test.c
+- fix Slot_test.c, have to compile other c files aswell
 
 - test the AliasTable
     - distribution

@@ -8,8 +8,25 @@
 #include "../include/LineChecker.h"
 #include "../include/AliasTable.h"
 
+typedef struct {
+  char s;
+  int color;
+} symbol;
 
-enum symbols {
+/**
+typedef struct {
+  char c;
+  int colorGroup;
+  bool visited;
+  bool inGroup;
+} symb;
+**/
+
+enum groupColors {
+  Red = 31, Green, Yellow, Blue, Magenta, Cyan, White
+};
+
+enum symbolsC {
   B = 'B', 
   W = 'W',
   C = '#', D = '&', E = '*'
@@ -26,7 +43,8 @@ typedef struct {
   Renderer* render;
   AliasTable* alias;
   char** slotGrid;
-  char symbols[5];
+  //symb** slotGrid;
+  symbol symbols[5];
   double prob[5];
   int w,h;
   int bonusSymbols;
@@ -35,6 +53,7 @@ typedef struct {
 } Slot;
 
 void initSlot(Slot* s, int w, int h);
+void freeSlot(Slot* s);
 void checkProb(Slot* s);
 void spin(Slot* s);
 
@@ -43,9 +62,12 @@ void animateSpin(Slot* s);
 void animateColumn(Slot* s, int column);
 char getRandomSymbol(Slot* s);
 void columnDown(Slot* s, int column);
+char* getSymbColor(Slot* s, char symb);
+void highlightGroups(Slot* s, groups* grps);
 
-
+void insertToStr(char* str, char* insert, int index);
 void cls();
+void update(Slot* s);
 
 
 #endif

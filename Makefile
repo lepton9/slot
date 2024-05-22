@@ -3,21 +3,22 @@ BIN := ./bin
 OBJS := ./objs
 INC := -I ./include
 FLAGS := -c $(INC)
+LINK := -lm -lncurses
 CC := gcc
 
 TESTS := ./tests
-TEST_TARGETS := AliasTable_test LineChecker_test
+TEST_TARGETS := AliasTable_test LineChecker_test #Slot_test not working, because need to compile LineChecker etc also, undefined functions used
 
-OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o
+OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o ./objs/main.o
 
-slot: $(OBJ)
-	$(CC) $^ -o $(BIN)/$@ -lm
+main: $(OBJ)
+	$(CC) $^ -o $(BIN)/$@ $(LINK)
 
 $(OBJS)/%.o: $(SRC)/%.c
 	$(CC) $(FLAGS) $< -o $@
 
 debug:
-	$(CC) $(INC) $(SRC)/*.c -pthread -g -o $(BIN)/db
+	$(CC) $(INC) $(SRC)/*.c -pthread -g -o $(BIN)/db $(LINK)
 	gdb -tui $(BIN)/db
 
 
@@ -30,17 +31,7 @@ test: all_tests
 all_tests: $(addprefix $(TESTS)/bin/, $(TEST_TARGETS))
 
 $(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(SRC)/%.c
-	$(CC) $(INC) $^ -lm -g -o $@
-
-
-#TEST_TARGETS = AliasTable_test LineChecker_test
-#test: $(TEST_TARGETS)
-#%: $(TESTS)/bin/%
-	#./$<
-#$(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(SRC)/%.c
-	#$(CC) $(INC) $^ -lm -g -o $@
-#.PHONY: test
-#test: $(addprefix $(TESTS)/bin/, $(TEST_TARGETS))
+	$(CC) $(INC) $^ $(LINK) -g -o $@
 
 
 clean:
@@ -48,5 +39,5 @@ clean:
 	rm -rf $(TESTS)/bin/*
 
 run:
-	$(BIN)/slot
+	$(BIN)/main
 

@@ -1,6 +1,7 @@
 #include "../include/LineChecker.h"
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #define MIN_GROUP_SIZE 1
 
@@ -16,12 +17,14 @@ group* initGroup() {
 groups* initGroups() {
   groups* grps = (groups*)malloc(sizeof(groups));
   grps->n = 0;
-  memset(grps->groups, 0, 32 * sizeof(group*));
+  memset(grps->groups, 0, 128 * sizeof(group*));
   return grps;
 }
 
 void freeGroups(groups* grps) {
-  for (int i = 0; i < grps->n; i++) free(grps->groups[i]);
+  for (int i = 0; i < grps->n; i++) {
+    if (grps->groups[i] != NULL) free(grps->groups[i]);
+  }
   free(grps);
 }
 
@@ -67,6 +70,45 @@ groups* findGroups(char** grid, const int w, const int h) {
   }
   return grps;
 }
+
+
+
+// Start of new implementation
+// Have to change the grid to be symbol** and not just char**
+
+void findGroupNew(symb** grid, group* curGrp, const int w, const int h, const int i, const int j) {
+  if (i >= w || j >= h || i < 0 || j < 0 || grid[i][j].visited || grid[i][j].inGroup || grid[i][j].c != curGrp->symb) return;
+  if (curGrp->symb < 0) memcpy(&(curGrp->symb), &(grid[i][j].c), sizeof(char));
+  cell c = {i,j};
+  addToGroup(curGrp, c);
+  grid[i][j].inGroup = true;
+  grid[i][j].visited = true;
+
+  findGroupNew(grid, curGrp, w, h, i+1, j  );
+  findGroupNew(grid, curGrp, w, h, i  , j+1);
+  findGroupNew(grid, curGrp, w, h, i-1, j  );
+  findGroupNew(grid, curGrp, w, h, i  , j-1);
+}
+
+groups* findGroupsNew(symb** grid, const int w, const int h) {
+
+  groups* grps = initGroups();
+  for (int i = 0; i < h; i++) {
+    for (int j = 0; j < w; j++) {
+      if (grid[i][j].inGroup || grid[i][j].visited) continue;
+      group* g = initGroup();
+      //g->symb = grid[i][j];
+      findGroupNew(grid, g, w, h, i, j);
+      if (g->n < MIN_GROUP_SIZE) free(g);
+      else addToGroups(grps, g);
+      grid[i][j].visited = true;
+    }
+  }
+  return grps;
+
+}
+
+
 
 
 int countSymbols(char** grid, int w, int h, char symbol) {

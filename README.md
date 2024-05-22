@@ -1,4 +1,5 @@
 # Slot
+Command line slot game.
 
 ## Alias method
 * [Alias method](https://web.archive.org/web/20131029203736/http://web.eecs.utk.edu/~vose/Publications/random.pdf)
@@ -14,5 +15,13 @@ make run
 ```
 make test       // Compiles and runs the tests
 make all_tests  // Compiles all the tests
+```
+
+## Installing
+```
+Arch:
+    sudo pacman -S ncurses
+Ubuntu:
+    sudo apt-get install libncurses5-dev libncursesw5-dev
 ```
 

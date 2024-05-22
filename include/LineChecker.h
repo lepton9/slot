@@ -20,9 +20,17 @@ typedef struct {
 } group;
 
 typedef struct {
-  group* groups[32];
+  group* groups[128];
   size_t n;
 } groups;
+
+typedef struct {
+  char c;
+  int colorGroup;
+  bool visited;
+  bool inGroup;
+} symb;
+
 
 group* initGroup();
 groups* initGroups();
