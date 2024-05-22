@@ -38,16 +38,20 @@ void addToGroups(groups* grps, group* g) {
 }
 
 void findGroup(symbol** grid, bool** visited, group* curGrp, const int w, const int h, const int i, const int j) {
-  if (i >= w || j >= h || i < 0 || j < 0 || visited[i][j] || grid[i][j].inGroup || grid[i][j].c != curGrp->symb) return;
-  cell c = {i,j};
-  addToGroup(curGrp, c);
-  grid[i][j].inGroup = true;
-  visited[i][j] = true;
+  if (i >= w || j >= h || i < 0 || j < 0 || visited[i][j] || grid[i][j].inGroup) return;
 
-  findGroup(grid, visited, curGrp, w, h, i+1, j  );
-  findGroup(grid, visited, curGrp, w, h, i  , j+1);
-  findGroup(grid, visited, curGrp, w, h, i-1, j  );
-  findGroup(grid, visited, curGrp, w, h, i  , j-1);
+  if (grid[i][j].c == curGrp->symb || grid[i][j].c == WILD) {
+    cell c = {i,j};
+    addToGroup(curGrp, c);
+    grid[i][j].inGroup = true;
+    grid[i][j].colorGroup = grid[curGrp->cells[0].x][curGrp->cells[0].y].colorGroup;
+    visited[i][j] = true;
+
+    findGroup(grid, visited, curGrp, w, h, i+1, j  );
+    findGroup(grid, visited, curGrp, w, h, i  , j+1);
+    findGroup(grid, visited, curGrp, w, h, i-1, j  );
+    findGroup(grid, visited, curGrp, w, h, i  , j-1);
+  }
 }
 
 groups* findGroups(symbol** grid, const int w, const int h) {
@@ -62,7 +66,7 @@ groups* findGroups(symbol** grid, const int w, const int h) {
   groups* grps = initGroups();
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      if (grid[i][j].inGroup || visited[i][j]) continue;
+      if (grid[i][j].inGroup || visited[i][j] || grid[i][j].c == WILD) continue;
       group* g = initGroup();
       memcpy(&(g->symb), &(grid[i][j].c), sizeof(char));
       findGroup(grid, visited, g, w, h, i, j);

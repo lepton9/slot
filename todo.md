@@ -1,12 +1,12 @@
 DONE:
-- fixed highlightGroups
+- make every column to the right spin from the current column
+- make wild ('w') be in any group
+- free memory for Slot, aliastable and other when exiting
 
 TODO:
 
-- make wild ('w') be in any group
-- make every column to the right spin from the current column
+- change the symbol probabilities
 - make buffer for output and make updating more efficient
-- free memory for Slot, aliastable and other when exiting
 - fix keyboard input
 - tests for Slot.c Slot_test.c
 - fix Slot_test.c, have to compile other c files aswell
@@ -17,6 +17,7 @@ TODO:
             - expected distribution from 10000 would then be about {2500, 3500, 4000}
 
 - groups of the same symbols is a hit/win
+- make the bonus
 - 3 bonus symbols to bonus
     - if 4 then something else
 

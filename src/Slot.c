@@ -31,17 +31,17 @@ void animateSpin(Slot* s) {
   s->bonusSymbols = 0;
   for (int i = 0; i < s->w; i++) {
     animateColumn(s, i);
-    s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, B);
+    s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, BONUS);
   }
 
   if (s->bonusSymbols == BONUS_MIN) s->bonus = true;
 }
 
 void animateColumn(Slot* s, int column) {
-  int am = (s->bonusSymbols == BONUS_MIN - 1) ? 100 : 20;
+  int am = (s->bonusSymbols == BONUS_MIN - 1) ? 80 : 20;
   spinColumn(s, column);
   for (int i = 0; i < am; i++) {
-    columnDown(s, column);
+    for (int col = column; col < s->w; col++) columnDown(s, col);
     cls();
     renderGrid(stdout, s->slotGrid, s->w, s->h);
     printf("Bonus: %d\n", s->bonusSymbols);
@@ -82,12 +82,14 @@ void checkProb(Slot* s) {
   assert(sum > 0);  
 }
 
-void initSlot(Slot* s, int w, int h) {
+Slot* initSlot(int w, int h) {
+  Slot* s = (Slot*)malloc(sizeof(Slot));
   s->slotGrid = (symbol**)malloc(h * sizeof(symbol*)); 
   s->w = w;
   s->h = h;
   s->bonusSymbols = 0;
   s->bonus = false;
+  s->exitFlag = false;
   for (int i = 0; i < h; i++) {
     s->slotGrid[i] = (symbol*)malloc(w * sizeof(symbol)); 
     for (int j = 0; j < w; j++) {
@@ -99,26 +101,22 @@ void initSlot(Slot* s, int w, int h) {
   memcpy(s->allSymbols, smbs, sizeof(smbs));
 
   //char sym[5] = {'B', 'W', '#', '&', '*'};
-  double p[5] = {0.01, 0.2, 0.3, 0.25, 0.4};
+  double p[5] = {0.01, 0.03, 0.3, 0.25, 0.4};
 
   //memcpy(s->symbols, sym, sizeof(sym));
   memcpy(s->prob, p, sizeof(p));
 
   s->alias = initialize(s->prob, sizeof(s->prob)/sizeof(s->prob[0]));
+  return s;
 }
 
 void freeSlot(Slot* s) {
-  for (int i = 0; i < s->h; i++) {
-    free(s->slotGrid[i]);
-  }
+  for (int i = 0; i < s->h; i++) free(s->slotGrid[i]);
   free(s->slotGrid);
   freeAlias(s->alias);
 
   // Free LineChecker and Renderer
-
-  free(s->render);
-
-  free(s);
+  //free(s->render);
 }
 
 char* getSymbColor(Slot* s, char symb) {
@@ -151,7 +149,7 @@ void highlightGroups(Slot* s, groups* grps) {
     for (int j = 0; j < s->w; j++) {
       char color[12];
       symbol symb = s->slotGrid[i][j];
-      if (symb.inGroup || symb.c == B) sprintf(color, "\033[%d;40m", s->slotGrid[i][j].colorGroup);
+      if (symb.inGroup || symb.c == BONUS) sprintf(color, "\033[%d;40m", s->slotGrid[i][j].colorGroup);
       else sprintf(color, "\033[%d;40m", 37);
       strcat(buffer, color);
       strncat(buffer, &(symb.c), 1);
@@ -170,6 +168,7 @@ void input() {
 }
 
 void keyPress(Slot* s) {
+  if (s->exitFlag) return;
   printf("Action:\n");
   cbreak();
   initscr();
@@ -177,7 +176,7 @@ void keyPress(Slot* s) {
   while ((c = getch()) != ERR) {
     refresh();
     endwin();
-    if (c == 'q') exit(0);
+    if (c == 'q') exitSlot(s);
     else if (c == 32) {
       animateSpin(s);
       groups* grps = findGroups(s->slotGrid, s->w, s->h);
@@ -192,12 +191,10 @@ void keyPress(Slot* s) {
 }
 
 void exitSlot(Slot* s) {
-  freeSlot(s);
-  exit(0);
+  s->exitFlag = true;
 }
 
 void update(Slot* s) {
   keyPress(s);
-
 }
 

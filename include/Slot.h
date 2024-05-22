@@ -8,20 +8,6 @@
 #include "../include/LineChecker.h"
 #include "../include/AliasTable.h"
 
-typedef struct {
-  char s;
-  int color;
-} symbolTemplate;
-
-enum groupColors {
-  Red = 31, Green, Yellow, Blue, Magenta, Cyan, White
-};
-
-enum symbolsC {
-  B = 'B', 
-  W = 'W',
-  C = '#', D = '&', E = '*'
-};
 
 typedef struct {
   char c;
@@ -39,10 +25,11 @@ typedef struct {
   int w,h;
   int bonusSymbols;
   bool bonus;
+  bool exitFlag;
 
 } Slot;
 
-void initSlot(Slot* s, int w, int h);
+Slot* initSlot(int w, int h);
 void freeSlot(Slot* s);
 void checkProb(Slot* s);
 void spin(Slot* s);
@@ -59,6 +46,7 @@ void highlightGroups(Slot* s, groups* grps);
 void insertToStr(char* str, char* insert, int index);
 void cls();
 void update(Slot* s);
+void exitSlot(Slot* s);
 
 
 #endif

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "../include/symbols.h"
 
 typedef struct {
 
@@ -23,13 +24,6 @@ typedef struct {
   group* groups[128];
   size_t n;
 } groups;
-
-typedef struct {
-  char c;
-  int colorGroup;
-  bool inGroup;
-} symbol;
-
 
 group* initGroup();
 groups* initGroups();
