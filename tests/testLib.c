@@ -43,8 +43,9 @@ void addLog(tests* tests, char* msg, char passed) {
 }
 
 void assertf(char expr, char* errMsg) {
-  if (expr) addLog(allTests, errMsg, 1);
-  else addLog(allTests, errMsg, 0);
+  addLog(allTests, errMsg, expr);
+  //if (expr) addLog(allTests, errMsg, 1);
+  //else addLog(allTests, errMsg, 0);
 }
 
 void printLogs() {

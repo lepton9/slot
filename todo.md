@@ -1,10 +1,10 @@
 DONE:
-- make every column to the right spin from the current column
-- make wild ('w') be in any group
-- free memory for Slot, aliastable and other when exiting
+- Fixed tests
 
 TODO:
 
+- make testLib give the function name in which the test failed, and maybe line number (__func__)
+    - list of function pointers to test functions to run
 - change the symbol probabilities
 - make buffer for output and make updating more efficient
 - fix keyboard input

@@ -7,12 +7,12 @@ LINK := -lm -lncurses
 CC := gcc
 
 TESTS := ./tests
-TEST_TARGETS := AliasTable_test LineChecker_test #Slot_test not working, because need to compile LineChecker etc also, undefined functions used
+TEST_TARGETS := AliasTable_test LineChecker_test Slot_test
 
-OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o ./objs/main.o
+OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o
 
 main: $(OBJ)
-	$(CC) $^ -o $(BIN)/$@ $(LINK)
+	$(CC) $^ $(SRC)/main.c -o $(BIN)/$@ $(LINK)
 
 $(OBJS)/%.o: $(SRC)/%.c
 	$(CC) $(FLAGS) $< -o $@
@@ -30,7 +30,8 @@ test: all_tests
 
 all_tests: $(addprefix $(TESTS)/bin/, $(TEST_TARGETS))
 
-$(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(SRC)/%.c
+#$(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(SRC)/%.c
+$(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(OBJ)
 	$(CC) $(INC) $^ $(LINK) -g -o $@
 
 

@@ -39,6 +39,7 @@ void addToGroups(groups* grps, group* g) {
 
 void findGroup(symbol** grid, bool** visited, group* curGrp, const int w, const int h, const int i, const int j) {
   if (i >= w || j >= h || i < 0 || j < 0 || visited[i][j] || grid[i][j].inGroup) return;
+  if (curGrp->n == 0) memcpy(&(curGrp->symb), &(grid[i][j].c), sizeof(char));
 
   if (grid[i][j].c == curGrp->symb || grid[i][j].c == WILD) {
     cell c = {i,j};
@@ -68,7 +69,7 @@ groups* findGroups(symbol** grid, const int w, const int h) {
     for (int j = 0; j < w; j++) {
       if (grid[i][j].inGroup || visited[i][j] || grid[i][j].c == WILD) continue;
       group* g = initGroup();
-      memcpy(&(g->symb), &(grid[i][j].c), sizeof(char));
+      //memcpy(&(g->symb), &(grid[i][j].c), sizeof(char));
       findGroup(grid, visited, g, w, h, i, j);
       if (g->n < MIN_GROUP_SIZE){
         for (int i = 0; i < g->n; i++) grid[g->cells[i].x][g->cells[i].y].inGroup = false;

@@ -5,8 +5,7 @@
 
 void test_columnDown() {
   int w = 5; int h = 5;
-  Slot* s;
-  initSlot(s, w, h);
+  Slot* s = initSlot(w, h);
   //char* r = {'#', '#', '#', '#', '#'};
   //memcpy(s->slotGrid[0], (char){'#', '#', '#', '#', '#'}, w);
 
@@ -23,8 +22,8 @@ void test_insertToStr() {
   strcpy(str1, "abcde");
   strcpy(str2, "ff");
 
-  insertToStr(str1, str2, 2);
-  assertf(strcmp(str1, "abffcde") != 0, "Compared strings differ");
+  insertToStr(&str1, str2, 2);
+  assertf(strcmp(str1, "abffcde") == 0, "Compared strings differ");
   assertf(strlen(str1) == 7, "Wrong string lenght");
 
   free(str1);

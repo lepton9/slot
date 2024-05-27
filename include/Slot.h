@@ -43,7 +43,7 @@ void columnDown(Slot* s, int column);
 char* getSymbColor(Slot* s, char symb);
 void highlightGroups(Slot* s, groups* grps);
 
-void insertToStr(char* str, char* insert, int index);
+void insertToStr(char** str, const char* insert, int index);
 void cls();
 void update(Slot* s);
 void exitSlot(Slot* s);

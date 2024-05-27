@@ -128,14 +128,15 @@ char* getSymbColor(Slot* s, char symb) {
   return c;
 }
 
-void insertToStr(char* str, char* insert, int index) {
-  char* newStr = malloc(sizeof(str) + sizeof(insert));
-  strncpy(newStr, str, index);
-  strcat(newStr, insert);
-  strcat(newStr, str + index);
-
-  str = realloc(str, sizeof(str) + sizeof(insert));
-  *str = *newStr;
+void insertToStr(char** str, const char* insert, int index) {
+  int strLen = strlen(*str);
+  int insertLen = strlen(insert);
+  char* newStr = malloc(strLen + insertLen + 1);
+  strncpy(newStr, *str, index);
+  strcpy(newStr + index, insert);
+  strcpy(newStr + index + insertLen, *str + index);
+  *str = realloc(*str, strLen + insertLen + 1);
+  strcpy(*str, newStr);
   free(newStr);
 }
 
@@ -150,7 +151,7 @@ void highlightGroups(Slot* s, groups* grps) {
       char color[12];
       symbol symb = s->slotGrid[i][j];
       if (symb.inGroup || symb.c == BONUS) sprintf(color, "\033[%d;40m", s->slotGrid[i][j].colorGroup);
-      else sprintf(color, "\033[%d;40m", 37);
+      else sprintf(color, "\033[%d;40m", White);
       strcat(buffer, color);
       strncat(buffer, &(symb.c), 1);
       strcat(buffer, "\033[0m ");
