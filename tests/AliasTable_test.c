@@ -49,8 +49,9 @@ void run_tests() {
 
 int main(int argc, char** argv) {
   makeTests(argv[0]);
-  run_tests();
-  printLogs();
+  addTestFunc(test_initialize);
+  addTestFunc(test_distribution);
+  runTests();
   return 0;
 }
 

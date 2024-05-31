@@ -9,6 +9,10 @@
 #define assertf(A, M, ...) if(!(A)) {log_error(M, ##__VA_ARGS__); assert(A); }
 **/
 
+#define INITIAL_SIZE 64
+
+typedef void (*testFunction)();
+
 typedef struct {
   char msg[64];
   char errn;
@@ -17,20 +21,30 @@ typedef struct {
 } log;
 
 typedef struct {
-  log* logs[64];
+  log* logs;
   size_t n;
+  size_t size;
 } logs;
 
 typedef struct {
+  testFunction* functions;
+  size_t n;
+  size_t size;
+} testFunctions;
+
+typedef struct {
   char testFile[64];
+  testFunctions* testFunctions;
   logs* failed;
   logs* passed;
 } tests;
 
-tests* makeTests(char file[32]);
+tests* makeTests(char file[64]);
 void freeTests(tests* tests);
+void addLogTo(logs* logs, log* log);
 void addLog(tests* tests, char* msg, char passed);
 void assertf(char expr, char* errMsg);
 void printLogs();
-
+void addTestFunc(testFunction);
+void runTests();
 

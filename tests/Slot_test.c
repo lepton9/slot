@@ -30,16 +30,12 @@ void test_insertToStr() {
   free(str2);
 }
 
-void run_tests() {
-  test_columnDown();
-  test_getRandomSymbol();
-  test_insertToStr();
-
-}
-
 int main(int argc, char** argv) {
   makeTests(argv[0]);
-  run_tests();
-  printLogs();
+  addTestFunc(&test_columnDown);
+  addTestFunc(&test_getRandomSymbol);
+  addTestFunc(&test_insertToStr);
+  runTests();
   return 0;
 }
+

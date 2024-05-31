@@ -1,15 +1,12 @@
 DONE:
-- Fixed tests
+- list of function pointers to test functions to run
 
 TODO:
 
 - make testLib give the function name in which the test failed, and maybe line number (__func__)
-    - list of function pointers to test functions to run
 - change the symbol probabilities
 - make buffer for output and make updating more efficient
 - fix keyboard input
-- tests for Slot.c Slot_test.c
-- fix Slot_test.c, have to compile other c files aswell
 
 - test the AliasTable
     - distribution

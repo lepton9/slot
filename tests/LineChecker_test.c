@@ -121,20 +121,15 @@ void test_findGroups() {
   freeGridVisited(&visited, h);
 }
 
-
-void run_tests() {
-  test_initGroup();
-  test_initGroups();
-  test_addToGroup();
-  test_addToGroups();
-  test_findGroup();
-  test_findGroups();
-}
-
 int main(int argc, char** argv) {
   makeTests(argv[0]);
-  run_tests();
-  printLogs();
+  addTestFunc(test_initGroup);
+  addTestFunc(test_initGroups);
+  addTestFunc(test_addToGroup);
+  addTestFunc(test_addToGroups);
+  addTestFunc(test_findGroup);
+  addTestFunc(test_findGroups);
+  runTests();
   return 0;
 }
 
