@@ -10,11 +10,7 @@ int main(int argc, char** argv) {
   //printf("Grid:\n");
   //renderGrid(stdout, s.slotGrid, s.w, s.h);
 
-  while(!s->exitFlag) {
-    update(s);
-  }
-  freeSlot(s);
-  free(s);
+  run(s);
 
   return 0;
 }

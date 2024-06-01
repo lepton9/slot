@@ -13,7 +13,27 @@
 #include <ncurses.h>
 #endif
 
-#define BONUS_MIN 3
+
+
+void setPlayer(Slot* s, Player* p) {
+  if (p) s->player = p;
+}
+
+void increaseBetAmount(Slot* s) {
+  s->betAmountCurrent += (s->betAmountCurrent + BET_INCREMENT > MAX_BET) ? 0 : BET_INCREMENT;
+}
+
+void lowerBetAmount(Slot* s) {
+  s->betAmountCurrent -= (s->betAmountCurrent - BET_INCREMENT < MIN_BET) ? 0 : BET_INCREMENT;
+}
+
+char setBet(Slot* s) {
+  return makeBet(s->player, s->betAmountCurrent);
+}
+
+void toggleTurboMode(Slot* s) {
+  s->turboMode ^= 1;
+}
 
 void spin(Slot* s) {
   for (int i = 0; i < s->w; i++) {
@@ -28,6 +48,7 @@ void spinColumn(Slot* s, int column) {
 }
 
 void animateSpin(Slot* s) {
+  s->bonus = false;
   s->bonusSymbols = 0;
   for (int i = 0; i < s->w; i++) {
     animateColumn(s, i);
@@ -38,7 +59,7 @@ void animateSpin(Slot* s) {
 }
 
 void animateColumn(Slot* s, int column) {
-  int am = (s->bonusSymbols == BONUS_MIN - 1) ? 80 : 20;
+  int am = (s->turboMode) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 30 : 10;
   spinColumn(s, column);
   for (int i = 0; i < am; i++) {
     for (int col = column; col < s->w; col++) columnDown(s, col);
@@ -51,6 +72,10 @@ void animateColumn(Slot* s, int column) {
 
 void cls() {
   printf("\033[2J\033[%d;%dH", 1, 1);
+}
+
+void cursorTo(const int line, const int column) {
+  printf("\033[%d;%dH", line, column);
 }
 
 void columnDown(Slot* s, int column) {
@@ -87,9 +112,11 @@ Slot* initSlot(int w, int h) {
   s->slotGrid = (symbol**)malloc(h * sizeof(symbol*)); 
   s->w = w;
   s->h = h;
+  s->betAmountCurrent = MIN_BET;
   s->bonusSymbols = 0;
   s->bonus = false;
   s->exitFlag = false;
+  s->turboMode = false;
   for (int i = 0; i < h; i++) {
     s->slotGrid[i] = (symbol*)malloc(w * sizeof(symbol)); 
     for (int j = 0; j < w; j++) {
@@ -100,13 +127,15 @@ Slot* initSlot(int w, int h) {
   symbolTemplate smbs[5] = {{'B', 31}, {'W', 32}, {'#', 33}, {'&', 34}, {'*', 35}};
   memcpy(s->allSymbols, smbs, sizeof(smbs));
 
-  //char sym[5] = {'B', 'W', '#', '&', '*'};
+  //              'B',  'W', '#',  '&', '*' 
   double p[5] = {0.01, 0.03, 0.3, 0.25, 0.4};
 
-  //memcpy(s->symbols, sym, sizeof(sym));
   memcpy(s->prob, p, sizeof(p));
 
   s->alias = initialize(s->prob, sizeof(s->prob)/sizeof(s->prob[0]));
+
+  s->player = initPlayer(1000);
+
   return s;
 }
 
@@ -114,6 +143,7 @@ void freeSlot(Slot* s) {
   for (int i = 0; i < s->h; i++) free(s->slotGrid[i]);
   free(s->slotGrid);
   freeAlias(s->alias);
+  freePlayer(s->player);
 
   // Free LineChecker and Renderer
   //free(s->render);
@@ -168,26 +198,57 @@ void input() {
   char buffer[s];
 }
 
+char spinSlot(Slot* s) {
+  char betMade = setBet(s);
+  if (!betMade) return 0;
+
+  animateSpin(s);
+  groups* grps = findGroups(s->slotGrid, s->w, s->h);
+  highlightGroups(s, grps);
+  freeGroups(grps);
+  addSpin(s->player, s->bonus);
+  if (s->bonus) {
+  // Bonus function
+    printf("Bonus!\n");
+  }
+  return 1;
+}
+
+void printUI(Slot* s) {
+  cursorTo(s->h + 2, 1);
+  const char* info = playerInfo(s->player);
+  fprintf(stdout, info);
+  fprintf(stdout, "Bet: %f | Turbo mode: %s\033[0K\n", s->betAmountCurrent, (s->turboMode) ? "ON" : "OFF");
+  fprintf(stdout, "\n| Spin: <space> | +Bet: <w> | -Bet: <s> | Turbo: <t> | Quit: <q> |\n");
+  free((void*)info);
+}
+
 void keyPress(Slot* s) {
   if (s->exitFlag) return;
-  printf("Action:\n");
+  printUI(s);
   cbreak();
-  initscr();
-  char c;
-  while ((c = getch()) != ERR) {
-    refresh();
-    endwin();
-    if (c == 'q') exitSlot(s);
-    else if (c == 32) {
-      animateSpin(s);
-      groups* grps = findGroups(s->slotGrid, s->w, s->h);
-
-      // Highlight groups
-      highlightGroups(s, grps);
-
-      freeGroups(grps);
-    }
-    else break;
+  char c = getch();
+  refresh();
+  endwin();
+  switch (c) {
+    case 'q':
+      exitSlot(s);
+      break;
+    case 'w':
+      increaseBetAmount(s);
+      break;
+    case 's':
+      lowerBetAmount(s);
+      break;
+    case 't':
+      toggleTurboMode(s);
+      break;
+    case 32:
+      char spin = spinSlot(s);
+      if (!spin) fprintf(stdout, "Bet amount too large\n");
+      break;
+    default:
+      break;
   }
 }
 
@@ -197,5 +258,18 @@ void exitSlot(Slot* s) {
 
 void update(Slot* s) {
   keyPress(s);
+}
+
+void run(Slot* s) {
+  cls();
+  initscr();
+  refresh();
+  endwin();
+  renderGrid(stdout, s->slotGrid, s->w, s->h);
+  while(!s->exitFlag) {
+    update(s);
+  }
+  freeSlot(s);
+  free(s);
 }
 

@@ -1,12 +1,12 @@
 DONE:
-- list of function pointers to test functions to run
+- fix keyboard input
 
 TODO:
 
+- save player to file and parse the file at start
 - make testLib give the function name in which the test failed, and maybe line number (__func__)
 - change the symbol probabilities
 - make buffer for output and make updating more efficient
-- fix keyboard input
 
 - test the AliasTable
     - distribution
