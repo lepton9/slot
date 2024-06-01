@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include "../include/symbols.h"
 
+#define MIN_GROUP_SIZE 6
+
 typedef struct {
 
 } LineChecker;
@@ -16,7 +18,7 @@ typedef struct {
 
 typedef struct {
   cell cells[64];
-  char symb;
+  symbol symb;
   size_t n;
 } group;
 
@@ -35,6 +37,8 @@ groups* findGroups(symbol** grid, const int w, const int h);
 
 int countSymbols(symbol** grid, int w, int h, char symbol);
 int countSymbolsCol(symbol** grid, int h, int column, char symbol);
+double calcGroupMulti(group* g);
+double calcReturn(groups* grps, const double bet);
 
 #endif
 

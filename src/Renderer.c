@@ -10,7 +10,7 @@ void renderGrid(FILE* s, symbol** grid, int w, int h) {
   char op[512] = "";
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      char c[2] = {grid[i][j].c, '\0'};
+      char c[2] = {grid[i][j].st.c, '\0'};
       strcat(op, c);
       strcat(op, " ");
     }

@@ -55,7 +55,7 @@ void animateSpin(Slot* s) {
     s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, BONUS);
   }
 
-  if (s->bonusSymbols == BONUS_MIN) s->bonus = true;
+  if (s->bonusSymbols >= BONUS_MIN) s->bonus = true;
 }
 
 void animateColumn(Slot* s, int column) {
@@ -93,7 +93,7 @@ symbolTemplate getRandomSymbolTemplate(Slot* s) {
 
 symbol getRandomSymbol(Slot* s) {
   symbolTemplate st = getRandomSymbolTemplate(s);
-  symbol symb = (symbol){st.s, st.color, 0};
+  symbol symb = (symbol){st, 0};
   return symb;
 }
 
@@ -115,6 +115,7 @@ Slot* initSlot(int w, int h) {
   s->betAmountCurrent = MIN_BET;
   s->bonusSymbols = 0;
   s->bonus = false;
+  s->freeSpins = 0;
   s->exitFlag = false;
   s->turboMode = false;
   for (int i = 0; i < h; i++) {
@@ -124,11 +125,26 @@ Slot* initSlot(int w, int h) {
     }
   }
 
-  symbolTemplate smbs[5] = {{'B', 31}, {'W', 32}, {'#', 33}, {'&', 34}, {'*', 35}};
+  // {char, color, baseMul, mulPerSym, probability}
+  symbolTemplate smbs[SYMBOL_AMOUNT] = {
+    {'B', 31,   0,    0, 0.005}, 
+    {'W',  0,   0,    0, 0.05 }, 
+    {'#', 32, 0.2,  1.1, 0.25 }, 
+    {'&', 33, 0.2, 1.25, 0.21 }, 
+    {'*', 34, 0.3,  1.5, 0.17 },
+    {'%', 35, 0.4,  1.5, 0.14 },
+    {'@', 36, 0.5,  1.5, 0.10 },
+    {'?', 91, 0.7, 1.75, 0.075}
+  };
   memcpy(s->allSymbols, smbs, sizeof(smbs));
 
-  //              'B',  'W', '#',  '&', '*' 
-  double p[5] = {0.01, 0.03, 0.3, 0.25, 0.4};
+  double p[SYMBOL_AMOUNT] = {smbs[0].probability, smbs[1].probability, smbs[2].probability, smbs[3].probability, smbs[4].probability, smbs[5].probability, smbs[6].probability, smbs[7].probability};
+  {
+    double sum = 0;
+    for (int i = 0; i < (int)sizeof(p)/sizeof(double); i++) sum += p[i];
+    // printf("Sum: %f\n", sum);
+    assert(sum == 1.0);
+  }
 
   memcpy(s->prob, p, sizeof(p));
 
@@ -153,7 +169,7 @@ char* getSymbColor(Slot* s, char symb) {
   int nSymb = 5;
   char* c = malloc(sizeof(char));
   for (int i = 0; i < nSymb; i++) {
-    if (s->allSymbols[i].s == symb) c = (char*)(&s->allSymbols[i].color);
+    if (s->allSymbols[i].c == symb) c = (char*)(&s->allSymbols[i].colorGroup);
   }
   return c;
 }
@@ -171,7 +187,7 @@ void insertToStr(char** str, const char* insert, int index) {
 }
 
 void highlightGroups(Slot* s, groups* grps) {
-  size_t sizeOfSymb = strlen("\033[00;40m") + sizeof(char) + strlen("\033[0m ");
+  size_t sizeOfSymb = strlen("\033[00m") + sizeof(char) + strlen("\033[0m ");
   char* buffer = (char*)malloc(sizeOfSymb * s->w * s->h + s->h * sizeof('\n'));
   buffer[0] = '\0';
   cls();
@@ -180,10 +196,10 @@ void highlightGroups(Slot* s, groups* grps) {
     for (int j = 0; j < s->w; j++) {
       char color[12];
       symbol symb = s->slotGrid[i][j];
-      if (symb.inGroup || symb.c == BONUS) sprintf(color, "\033[%d;40m", s->slotGrid[i][j].colorGroup);
-      else sprintf(color, "\033[%d;40m", White);
+      if (symb.inGroup || symb.st.c == BONUS) sprintf(color, "\033[%dm", s->slotGrid[i][j].st.colorGroup);
+      else sprintf(color, "\033[%dm", White);
       strcat(buffer, color);
-      strncat(buffer, &(symb.c), 1);
+      strncat(buffer, &(symb.st.c), 1);
       strcat(buffer, "\033[0m ");
     }
     strcat(buffer, "\n");
@@ -205,21 +221,33 @@ char spinSlot(Slot* s) {
   animateSpin(s);
   groups* grps = findGroups(s->slotGrid, s->w, s->h);
   highlightGroups(s, grps);
+  double retAm = calcReturn(grps, s->betAmountCurrent);
+  addWinnings(s->player, retAm);
+  printf("You won: %.2f\n", retAm);
+
   freeGroups(grps);
   addSpin(s->player, s->bonus);
   if (s->bonus) {
-  // Bonus function
-    printf("Bonus!\n");
+    // Bonus function
+    printf("Bonus! Not implemented\n");
   }
   return 1;
 }
 
+void printSymbolInfo(Slot* s) {
+  fprintf(stdout, "\nSymbol : Probability\n");
+  for (int i = 0; i < SYMBOL_AMOUNT; i++) {
+    symbolTemplate sym = s->allSymbols[i];
+    fprintf(stdout, "\033[%dm%c\033[0m : %0.3f\n", sym.colorGroup, sym.c, sym.probability);
+  }
+}
+
 void printUI(Slot* s) {
-  cursorTo(s->h + 2, 1);
+  cursorTo(s->h + 3, 1);
   const char* info = playerInfo(s->player);
-  fprintf(stdout, info);
-  fprintf(stdout, "Bet: %f | Turbo mode: %s\033[0K\n", s->betAmountCurrent, (s->turboMode) ? "ON" : "OFF");
-  fprintf(stdout, "\n| Spin: <space> | +Bet: <w> | -Bet: <s> | Turbo: <t> | Quit: <q> |\n");
+  fprintf(stdout, "%s", info);
+  fprintf(stdout, "Bet: %.2f | Turbo mode: %s\033[0K\n", s->betAmountCurrent, (s->turboMode) ? "\033[32mON\033[0m" : "\033[31mOFF\033[0m");
+  fprintf(stdout, "\n| Spin: <space> | +Bet: <w> | -Bet: <s> | Turbo: <t> | Help: <h> | Quit: <q> |\n");
   free((void*)info);
 }
 
@@ -243,9 +271,11 @@ void keyPress(Slot* s) {
     case 't':
       toggleTurboMode(s);
       break;
+    case 'h':
+      printSymbolInfo(s);
+      break;
     case 32:
-      char spin = spinSlot(s);
-      if (!spin) fprintf(stdout, "Bet amount too large\n");
+      if (!spinSlot(s)) fprintf(stdout, "Bet amount too large\n");
       break;
     default:
       break;

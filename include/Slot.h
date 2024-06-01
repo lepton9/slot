@@ -13,6 +13,7 @@
 #define MIN_BET 10
 #define MAX_BET 1000
 #define BET_INCREMENT 10
+#define SYMBOL_AMOUNT 8
 
 typedef struct {
   char c;
@@ -25,13 +26,14 @@ typedef struct {
   Renderer* render;
   AliasTable* alias;
   symbol** slotGrid;
-  symbolTemplate allSymbols[5];
-  double prob[5];
+  symbolTemplate allSymbols[SYMBOL_AMOUNT];
+  double prob[SYMBOL_AMOUNT];
   int w,h;
-  int bonusSymbols;
-  bool bonus;
   bool exitFlag;
   bool turboMode;
+  int bonusSymbols;
+  int freeSpins;
+  bool bonus;
 
   double betAmountCurrent;
 

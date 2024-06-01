@@ -38,7 +38,7 @@ void addWinnings(Player* p, double amount) {
 
 const char* playerInfo(Player* p) {
   char* info = malloc(100 * sizeof(char));
-  sprintf(info, "Balance: %f | Spins: %d | Bonuses: %d | Last bonus: %d\033[0K\n", p->balance, p->totalSpins, p->bonusAmount, p->lastBonus);
+  sprintf(info, "Balance: %.2f | Spins: %d | Bonuses: %d | Last bonus: %d\033[0K\n", p->balance, p->totalSpins, p->bonusAmount, p->lastBonus);
   return info;
 }
 
