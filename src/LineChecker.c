@@ -114,6 +114,10 @@ double calcGroupMulti(group* g) {
   return multi;
 }
 
+double calcReturnGroup(group* g, const double bet) {
+  return bet * calcGroupMulti(g);
+}
+
 double calcReturn(groups* grps, const double bet) {
   double amount = 0;
   for (int i = 0; i < grps->n; i++) {

@@ -1,15 +1,11 @@
 DONE:
-- make a pop function that sets groups as ' ' blank symbol, and then reroll the symbols and search for groups again
-    - if no groups spin the whole grid again
+- make the bonus
 
 TODO:
 
-- make the bonus
-    - 3 bonus symbols to bonus
-    - if 4 then something else
-    - better multiplyers for bonus
-    - 10 free spins, 15 for 4 symbols
-    - +5 free spins for 3 bonus symbols inside bonus
+- better memory allocation
+    - change the symbols only by the symbolTemplates
+    - pointers to symbolTemplate in symbol
 - save player to file and parse the file at start
 - change the symbol probabilities
 - make buffer for output and make updating more efficient

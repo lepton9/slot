@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <math.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <conio.h>
@@ -48,25 +49,19 @@ void spinColumn(Slot* s, int column) {
 }
 
 void animateSpin(Slot* s) {
-  s->bonus = false;
   s->bonusSymbols = 0;
   for (int i = 0; i < s->w; i++) {
     animateColumn(s, i);
     s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, BONUS);
   }
-  if (s->bonusSymbols >= BONUS_MIN) s->bonus = true;
 }
 
 void animateColumn(Slot* s, int column) {
-  int am = (s->turboMode) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 30 : 10;
+  int am = (s->turboMode && !s->bonus) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 30 : 10;
   spinColumn(s, column);
   for (int i = 0; i < am; i++) {
     for (int col = column; col < s->w; col++) columnDown(s, col);
-    cls();
     printHighlightedGrid(s, NULL);
-    // renderGrid(stdout, s->slotGrid, s->w, s->h);
-    printUI(s);
-    // printf("Bonus: %d\n", s->bonusSymbols);
     usleep(20000);
   }
 }
@@ -82,10 +77,7 @@ void animateBlankSymbColumn(Slot* s, int column, int blanks) {
       s->slotGrid[i][column] = s->slotGrid[i-1][column];
     }
     s->slotGrid[0][column] = getRandomSymbol(s);
-    cls();
     printHighlightedGrid(s, NULL);
-    // renderGrid(stdout, s->slotGrid, s->w, s->h);
-    printUI(s);
     usleep(20000);
   }
 }
@@ -96,7 +88,6 @@ void animateBlankSymbSpin(Slot* s) {
     animateBlankSymbColumn(s, i, countSymbolsCol(s->slotGrid, s->h, i, BLANK));
     s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, BONUS);
   }
-  if (s->bonusSymbols >= BONUS_MIN) s->bonus = true;
 }
 
 void columnGravity(Slot* s, int col, int bY) {
@@ -111,6 +102,13 @@ void symbolsFallDown(Slot* s) {
     for (int y = s->h-1; y >= 0; y--) {
       if (s->slotGrid[y][col].st.c != BLANK) columnGravity(s, col, y);
     }
+  }
+}
+
+void clearLines(int line, int amount) {
+  for (int i = 0; i < amount; i++) {
+    cursorTo(line + i, 1);
+    printf("\033[2K");
   }
 }
 
@@ -130,7 +128,7 @@ void columnDown(Slot* s, int column) {
 }
 
 symbolTemplate getRandomSymbolTemplate(Slot* s) {
-  int i = randAlias(s->alias);
+  int i = (s->bonus) ? randAlias(s->aliasBonus) : randAlias(s->alias);
   assert(i >= 0);
   return s->allSymbols[i];
 }
@@ -145,21 +143,12 @@ symbol getBlankSymbol() {
   return (symbol){(symbolTemplate){' '}, 0};
 }
 
-void checkProb(Slot* s) {
-  assert(sizeof(s->prob)/sizeof(s->prob[0]) == sizeof(s->allSymbols)/sizeof(s->allSymbols[0]));
-
-  double sum = 0;
-  for (int i = 0; i < sizeof(s->prob)/sizeof(s->prob[0]); i++) {
-    sum += s->prob[i];
-  }
-  assert(sum > 0);  
-}
-
 Slot* initSlot(int w, int h) {
   Slot* s = (Slot*)malloc(sizeof(Slot));
   s->slotGrid = (symbol**)malloc(h * sizeof(symbol*)); 
   s->w = w;
   s->h = h;
+  s->currentWinAm = 0.0;
   s->betAmountCurrent = MIN_BET;
   s->bonusSymbols = 0;
   s->bonus = false;
@@ -186,17 +175,23 @@ Slot* initSlot(int w, int h) {
   };
   memcpy(s->allSymbols, smbs, sizeof(smbs));
 
-  double p[SYMBOL_AMOUNT] = {smbs[0].probability, smbs[1].probability, smbs[2].probability, smbs[3].probability, smbs[4].probability, smbs[5].probability, smbs[6].probability, smbs[7].probability};
+  double ps[SYMBOL_AMOUNT] = {smbs[0].probability, smbs[1].probability, smbs[2].probability, smbs[3].probability, smbs[4].probability, smbs[5].probability, smbs[6].probability, smbs[7].probability};
+
+  double pBonus[SYMBOL_AMOUNT] = {0.005, 0.1, 0.1, 0.11, 0.16, 0.175, 0.20, 0.15};
+
   {
-    double sum = 0;
-    for (int i = 0; i < (int)sizeof(p)/sizeof(double); i++) sum += p[i];
-    // printf("Sum: %f\n", sum);
-    assert(sum == 1.0);
+    double sum = 0.0;
+    double sumBonus = 0.0;
+    for (int i = 0; i < SYMBOL_AMOUNT; i++) sum += ps[i];
+    for (int i = 0; i < SYMBOL_AMOUNT; i++) sumBonus += pBonus[i];
+    printf("sum: %f\n", sum);
+    assert(fabs(sum - 1.0) < 0.000001);
+    printf("sumBonus: %f\n", sumBonus);
+    assert(fabs(sumBonus - 1.0) < 0.000001);
   }
 
-  memcpy(s->prob, p, sizeof(p));
-
-  s->alias = initialize(s->prob, sizeof(s->prob)/sizeof(s->prob[0]));
+  s->alias = initialize(ps, SYMBOL_AMOUNT);
+  s->aliasBonus = initialize(pBonus, SYMBOL_AMOUNT);
 
   s->player = initPlayer(1000);
 
@@ -207,6 +202,7 @@ void freeSlot(Slot* s) {
   for (int i = 0; i < s->h; i++) free(s->slotGrid[i]);
   free(s->slotGrid);
   freeAlias(s->alias);
+  freeAlias(s->aliasBonus);
   freePlayer(s->player);
 
   // Free LineChecker and Renderer
@@ -238,7 +234,6 @@ void printHighlightedGrid(Slot* s, groups* grps) {
   size_t sizeOfSymb = strlen("\033[00m") + sizeof(char) + strlen("\033[0m ");
   char* buffer = (char*)malloc(sizeOfSymb * s->w * s->h + s->h * sizeof('\n'));
   buffer[0] = '\0';
-  cls();
 
   for (int i = 0; i < s->h; i++) {
     for (int j = 0; j < s->w; j++) {
@@ -253,6 +248,7 @@ void printHighlightedGrid(Slot* s, groups* grps) {
     strcat(buffer, "\n");
   }
 
+  cursorTo(1, 1);
   render(stdout, buffer);
   free(buffer);
 }
@@ -262,52 +258,80 @@ void input() {
   char buffer[s];
 }
 
-double popAndSpin(Slot* s, groups* grps) {
-  double wonAm = 0;
+void popAndSpin(Slot* s, groups* grps) {
   while(grps->n > 0) {
-    usleep((s->turboMode) ? 100000 : 500000);
+    usleep((s->turboMode && !s->bonus) ? 100000 : 500000);
     for (int i = 0; i < grps->n; i++) {
       popGroup(s->slotGrid, grps->groups[i]);
       printHighlightedGrid(s, grps);
-      printUI(s);
-      usleep((s->turboMode) ? 100000 : 500000);
+      double retAm = calcReturnGroup(grps->groups[i], s->betAmountCurrent);
+      s->currentWinAm += retAm;
+      printf("\033[2KWon: %.2f\n", retAm);
+      usleep((s->turboMode && !s->bonus) ? 100000 : 500000);
     }
     symbolsFallDown(s);
     animateBlankSymbSpin(s);
 
     freeGroups(grps);
     grps = findGroups(s->slotGrid, s->w, s->h);
-    double retAm = calcReturn(grps, s->betAmountCurrent);
-    wonAm += retAm;
     printHighlightedGrid(s, grps);
-    printf("Won: %.2f\n", retAm);
-    printUI(s);
   }
-  return wonAm;
+}
+
+void bonusMode(Slot* s) {
+  s->bonus = true;
+  s->freeSpins = FREESPINS_BEGIN;
+  if (s->bonusSymbols > BONUS_MIN) s->freeSpins += FREESPINS_GAIN;
+  cursorTo(s->h+1, 1);
+  printf("\033[2KBONUS! %d free spins won!\n", s->freeSpins);
+  usleep(5000000);
+  printf("\033[2KPress 'b' to start bonus!\n");
+  char c;
+  while ((c = keyPress(s)) != 'b') {
+    continue;
+  }
+
+  while (s->freeSpins > 0) {
+    s->freeSpins--;
+    cursorTo(s->h+2, 1);
+    printf("\033[2KFree spins: %d | Win amount: %.2f\n", s->freeSpins, s->currentWinAm);
+    spinSlot(s);
+    if (s->bonusSymbols >= BONUS_MIN) {
+      s->freeSpins += FREESPINS_GAIN;
+      cursorTo(s->h+1, 1);
+      printf("\033[2KWon %d more free spins!\n", FREESPINS_GAIN);
+    }
+    usleep(500000);
+  }
+
+  clearLines(s->h+2, 1);
+  s->bonus = false;
 }
 
 char spinSlot(Slot* s) {
-  char betMade = setBet(s);
-  if (!betMade) return 0;
+  if (!s->bonus) {
+    char betMade = setBet(s);
+    if (!betMade) return 0;
+    s->currentWinAm = 0.0;
+  }
 
+  clearLines(s->h+1, 1);
+  printUI(s);
   animateSpin(s);
   groups* grps = findGroups(s->slotGrid, s->w, s->h);
   printHighlightedGrid(s, grps);
-  double totalWon = calcReturn(grps, s->betAmountCurrent);
-  printf("Won: %.2f\n", totalWon);
-  printUI(s);
 
-  if (grps->n > 0) totalWon += popAndSpin(s, grps);
+  if (grps->n > 0) popAndSpin(s, grps);
 
-  cursorTo(s->h+1, 1);
-  printf("\033[2KTotal won: %.2f\n", totalWon);
   freeGroups(grps);
-  addWinnings(s->player, totalWon);
-  addSpin(s->player, s->bonus);
-  if (s->bonus) {
-    // Bonus function
-    printf("Bonus! Not implemented\n");
+  if (!s->bonus) addSpin(s->player, s->bonusSymbols >= BONUS_MIN);
+  if (s->bonusSymbols >= BONUS_MIN && !s->bonus) {
+    printUI(s);
+    bonusMode(s);
   }
+  cursorTo(s->h+1, 1);
+  printf("\033[2KTotal won: %.2f\n", s->currentWinAm);
+  if (!s->bonus) addWinnings(s->player, s->currentWinAm);
   return 1;
 }
 
@@ -328,13 +352,16 @@ void printUI(Slot* s) {
   free((void*)info);
 }
 
-void keyPress(Slot* s) {
-  if (s->exitFlag) return;
-  printUI(s);
+char keyPress(Slot* s) {
+  if (s->exitFlag) return '\0';
   cbreak();
   char c = getch();
   refresh();
   endwin();
+  return c;
+}
+
+void handleKeyPress(Slot* s, const char c) {
   switch (c) {
     case 'q':
       exitSlot(s);
@@ -364,7 +391,8 @@ void exitSlot(Slot* s) {
 }
 
 void update(Slot* s) {
-  keyPress(s);
+  printUI(s);
+  handleKeyPress(s, keyPress(s));
 }
 
 void run(Slot* s) {
@@ -377,6 +405,6 @@ void run(Slot* s) {
     update(s);
   }
   freeSlot(s);
-  free(s);
+  // free(s);
 }
 
