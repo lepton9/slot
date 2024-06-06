@@ -1,5 +1,6 @@
 DONE:
-- make the actual game functionality
+- make a pop function that sets groups as ' ' blank symbol, and then reroll the symbols and search for groups again
+    - if no groups spin the whole grid again
 
 TODO:
 
@@ -10,7 +11,6 @@ TODO:
     - 10 free spins, 15 for 4 symbols
     - +5 free spins for 3 bonus symbols inside bonus
 - save player to file and parse the file at start
-- make testLib give the function name in which the test failed, and maybe line number (__func__) from assert #expr, __FILE__, __LINE__, __ASSERT_FUNCTION
 - change the symbol probabilities
 - make buffer for output and make updating more efficient
     - only update the changing symbols

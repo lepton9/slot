@@ -48,11 +48,15 @@ char spinSlot(Slot* s);
 void spinColumn(Slot* s, int column);
 void animateSpin(Slot* s);
 void animateColumn(Slot* s, int column);
+void animateBlankSymbSpin(Slot* s);
+void animateBlankSymbColumn(Slot* s, int column, int blanks);
+void symbolsFallDown(Slot* s);
 symbolTemplate getRandomSymbolTemplate(Slot* s);
 symbol getRandomSymbol(Slot* s);
+symbol getBlankSymbol();
 void columnDown(Slot* s, int column);
 char* getSymbColor(Slot* s, char symb);
-void highlightGroups(Slot* s, groups* grps);
+void printHighlightedGrid(Slot* s, groups* grps);
 
 void insertToStr(char** str, const char* insert, int index);
 void cls();

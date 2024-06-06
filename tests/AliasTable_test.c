@@ -1,5 +1,5 @@
 #include "../include/AliasTable.h"
-#include "testLib.h"
+#include "../../testLibC/utestC.h"
 
 void test_initialize() {
   AliasTable* at;

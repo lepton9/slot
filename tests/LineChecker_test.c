@@ -1,6 +1,6 @@
 #include "../include/LineChecker.h"
 #include "../include/Slot.h"
-#include "testLib.h"
+#include "../../testLibC/utestC.h"
 
 
 void initGridVisited(Slot* s, bool*** visited, const int w, const int h) {
@@ -9,7 +9,7 @@ void initGridVisited(Slot* s, bool*** visited, const int w, const int h) {
         {'#','&','#','%','#'},
         {'#','&','&','%','#'},
         {'#','#','&','%','#'},
-        {'#','#','#','%','%'}
+        {'#','#','%','%','%'}
     };
 
     //*grid = (symbol**)malloc(h * sizeof(symbol*));
@@ -19,8 +19,8 @@ void initGridVisited(Slot* s, bool*** visited, const int w, const int h) {
       (*visited)[i] = (bool*)malloc(w * sizeof(bool));
       memset((*visited)[i], false, w * sizeof(bool));
       for (int j = 0; j < w; j++) {
-        s->slotGrid[i][j].c = gr[i][j];
-        s->slotGrid[i][j].colorGroup = (int)(*getSymbColor(s, gr[i][j]));
+        s->slotGrid[i][j].st.c = gr[i][j];
+        s->slotGrid[i][j].st.colorGroup = (int)(*getSymbColor(s, gr[i][j]));
       }
     }
 /**
@@ -86,13 +86,13 @@ void test_findGroup() {
   group* g = initGroup();
   findGroup(slot->slotGrid, visited, g, w, h, 1, 1);
   assertf(g->n == 4, "Group size not as expected");
-  assertf(g->symb == '&', "Group symbol not as expected");
+  assertf(g->symb.st.c == '&', "Group symbol not as expected");
   assertf(g->cells[0].x == 1 && g->cells[0].y == 1, "First element in group not as expected");
 
   group* g1 = initGroup();
   findGroup(slot->slotGrid, visited, g1, w, h, 3, 3);
-  assertf(g1->n == 5, "Group size not as expected");
-  assertf(g1->symb == '%', "Group symbol not as expected");
+  assertf(g1->n == 6, "Group size not as expected");
+  assertf(g1->symb.st.c == '%', "Group symbol not as expected");
 
   free(g);
   free(g1);
@@ -107,8 +107,9 @@ void test_findGroups() {
 
   initGridVisited(slot, &visited, w, h);
 
+
   groups* grps = findGroups(slot->slotGrid, w, h);
-  assertf(grps->n == 4, "Amount of groups not as expected");
+  assertf(grps->n == 2, "Amount of groups not as expected");
 
   /**
   int cells = 0;
@@ -121,14 +122,44 @@ void test_findGroups() {
   freeGridVisited(&visited, h);
 }
 
+void test_popGroup() {
+  int w = 5; int h = 5;
+  Slot* slot = initSlot(w, h);
+  bool** visited;
+  initGridVisited(slot, &visited, w, h);
+  group* g = initGroup();
+  findGroup(slot->slotGrid, visited, g, w, h, 1, 1);
+
+  char gr[5][5] = {
+      {'#','#','#','#','%'},
+      {'#',' ','#','%','#'},
+      {'#',' ',' ','%','#'},
+      {'#','#',' ','%','#'},
+      {'#','#','%','%','%'}
+  };
+
+  popGroup(slot->slotGrid, g);
+  for (int i = 0; i < h; i++) {
+    for (int j = 0; j < h; j++) {
+      assertEq_char(slot->slotGrid[i][j].st.c, gr[i][j], "Should be same symbols");
+    }
+  }
+
+  free(g);
+  freeSlot(slot);
+  freeGridVisited(&visited, h);
+}
+
 int main(int argc, char** argv) {
   makeTests(argv[0]);
+  // makeTests(__FILE__);
   addTestFunc(test_initGroup);
   addTestFunc(test_initGroups);
   addTestFunc(test_addToGroup);
   addTestFunc(test_addToGroups);
   addTestFunc(test_findGroup);
   addTestFunc(test_findGroups);
+  addTestFunc(test_popGroup);
   runTests();
   return 0;
 }

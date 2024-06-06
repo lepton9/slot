@@ -21,7 +21,7 @@ Red = 31, Green, Yellow, Blue, Magenta, Cyan, White
 enum symbols {
   BONUS = 'B', 
   WILD = 'W',
-  C = '#', D = '&', E = '*'
+  C = '#', D = '&', E = '*', BLANK = ' '
 };
 
 #endif

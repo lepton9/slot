@@ -54,7 +54,6 @@ void animateSpin(Slot* s) {
     animateColumn(s, i);
     s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, BONUS);
   }
-
   if (s->bonusSymbols >= BONUS_MIN) s->bonus = true;
 }
 
@@ -64,9 +63,54 @@ void animateColumn(Slot* s, int column) {
   for (int i = 0; i < am; i++) {
     for (int col = column; col < s->w; col++) columnDown(s, col);
     cls();
-    renderGrid(stdout, s->slotGrid, s->w, s->h);
-    printf("Bonus: %d\n", s->bonusSymbols);
+    printHighlightedGrid(s, NULL);
+    // renderGrid(stdout, s->slotGrid, s->w, s->h);
+    printUI(s);
+    // printf("Bonus: %d\n", s->bonusSymbols);
     usleep(20000);
+  }
+}
+
+void animateBlankSymbColumn(Slot* s, int column, int blanks) {
+  if (blanks <= 0) return;
+  int am = (s->turboMode) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 30 : 10;
+  for (int i = 0; i < blanks; i++) {
+    s->slotGrid[i][column] = getRandomSymbol(s);
+  }
+  for (int i = 0; i < am; i++) {
+    for (int i = blanks-1; i > 0; i--) {
+      s->slotGrid[i][column] = s->slotGrid[i-1][column];
+    }
+    s->slotGrid[0][column] = getRandomSymbol(s);
+    cls();
+    printHighlightedGrid(s, NULL);
+    // renderGrid(stdout, s->slotGrid, s->w, s->h);
+    printUI(s);
+    usleep(20000);
+  }
+}
+
+void animateBlankSymbSpin(Slot* s) {
+  s->bonusSymbols = 0;
+  for (int i = 0; i < s->w; i++) {
+    animateBlankSymbColumn(s, i, countSymbolsCol(s->slotGrid, s->h, i, BLANK));
+    s->bonusSymbols += countSymbolsCol(s->slotGrid, s->h, i, BONUS);
+  }
+  if (s->bonusSymbols >= BONUS_MIN) s->bonus = true;
+}
+
+void columnGravity(Slot* s, int col, int bY) {
+  for (int y = bY+1; y < s->h && s->slotGrid[y][col].st.c == BLANK; y++) {
+    s->slotGrid[y][col] = s->slotGrid[y-1][col];
+    s->slotGrid[y-1][col] = getBlankSymbol();
+  }
+}
+
+void symbolsFallDown(Slot* s) {
+  for (int col = 0; col < s->w; col++) {
+    for (int y = s->h-1; y >= 0; y--) {
+      if (s->slotGrid[y][col].st.c != BLANK) columnGravity(s, col, y);
+    }
   }
 }
 
@@ -95,6 +139,10 @@ symbol getRandomSymbol(Slot* s) {
   symbolTemplate st = getRandomSymbolTemplate(s);
   symbol symb = (symbol){st, 0};
   return symb;
+}
+
+symbol getBlankSymbol() {
+  return (symbol){(symbolTemplate){' '}, 0};
 }
 
 void checkProb(Slot* s) {
@@ -186,7 +234,7 @@ void insertToStr(char** str, const char* insert, int index) {
   free(newStr);
 }
 
-void highlightGroups(Slot* s, groups* grps) {
+void printHighlightedGrid(Slot* s, groups* grps) {
   size_t sizeOfSymb = strlen("\033[00m") + sizeof(char) + strlen("\033[0m ");
   char* buffer = (char*)malloc(sizeOfSymb * s->w * s->h + s->h * sizeof('\n'));
   buffer[0] = '\0';
@@ -214,18 +262,47 @@ void input() {
   char buffer[s];
 }
 
+double popAndSpin(Slot* s, groups* grps) {
+  double wonAm = 0;
+  while(grps->n > 0) {
+    usleep((s->turboMode) ? 100000 : 500000);
+    for (int i = 0; i < grps->n; i++) {
+      popGroup(s->slotGrid, grps->groups[i]);
+      printHighlightedGrid(s, grps);
+      printUI(s);
+      usleep((s->turboMode) ? 100000 : 500000);
+    }
+    symbolsFallDown(s);
+    animateBlankSymbSpin(s);
+
+    freeGroups(grps);
+    grps = findGroups(s->slotGrid, s->w, s->h);
+    double retAm = calcReturn(grps, s->betAmountCurrent);
+    wonAm += retAm;
+    printHighlightedGrid(s, grps);
+    printf("Won: %.2f\n", retAm);
+    printUI(s);
+  }
+  return wonAm;
+}
+
 char spinSlot(Slot* s) {
   char betMade = setBet(s);
   if (!betMade) return 0;
 
   animateSpin(s);
   groups* grps = findGroups(s->slotGrid, s->w, s->h);
-  highlightGroups(s, grps);
-  double retAm = calcReturn(grps, s->betAmountCurrent);
-  addWinnings(s->player, retAm);
-  printf("You won: %.2f\n", retAm);
+  printHighlightedGrid(s, grps);
+  double totalWon = calcReturn(grps, s->betAmountCurrent);
+  printf("Won: %.2f\n", totalWon);
+  printUI(s);
 
+  if (grps->n > 0) totalWon += popAndSpin(s, grps);
+
+  cursorTo(s->h+1, 1);
+  printf("\033[2KTotal won: %.2f\n", totalWon);
   freeGroups(grps);
+  addWinnings(s->player, totalWon);
   addSpin(s->player, s->bonus);
   if (s->bonus) {
     // Bonus function

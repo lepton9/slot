@@ -83,6 +83,12 @@ groups* findGroups(symbol** grid, const int w, const int h) {
   return grps;
 }
 
+void popGroup(symbol** grid, group* g) {
+  for (int i = 0; i < g->n; i++) {
+    grid[g->cells[i].x][g->cells[i].y] = (symbol){(symbolTemplate){' '}, 0};
+  }
+}
+
 int countSymbols(symbol** grid, int w, int h, char symbol) {
   int sum = 0;
   for (int i = 0; i < h; i++) {

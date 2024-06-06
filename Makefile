@@ -1,7 +1,7 @@
 SRC := ./src
 BIN := ./bin
 OBJS := ./objs
-INC := -I ./include
+INC := -I ./include -I ../testLibC
 FLAGS := -c $(INC)
 LINK := -lm -lncurses
 CC := gcc
@@ -31,7 +31,7 @@ test: all_tests
 all_tests: $(addprefix $(TESTS)/bin/, $(TEST_TARGETS))
 
 #$(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(SRC)/%.c
-$(TESTS)/bin/%_test: $(TESTS)/testLib.c $(TESTS)/%_test.c $(OBJ)
+$(TESTS)/bin/%_test: ../testLibC/utestC.c $(TESTS)/%_test.c $(OBJ)
 	$(CC) $(INC) $^ $(LINK) -g -o $@
 
 

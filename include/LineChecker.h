@@ -34,6 +34,7 @@ void addToGroup(group* g, cell c);
 void addToGroups(groups* grps, group* g);
 void findGroup(symbol** grid, bool** visited, group* g, const int w, const int h, const int i, const int j);
 groups* findGroups(symbol** grid, const int w, const int h);
+void popGroup(symbol** grid, group* g);
 
 int countSymbols(symbol** grid, int w, int h, char symbol);
 int countSymbolsCol(symbol** grid, int h, int column, char symbol);

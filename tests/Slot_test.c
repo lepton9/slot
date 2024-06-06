@@ -1,5 +1,5 @@
 #include "../include/Slot.h"
-#include "testLib.h"
+#include "../../testLibC/utestC.h"
 #include <string.h>
 
 
@@ -14,6 +14,40 @@ void test_columnDown() {
 
 void test_getRandomSymbol() {
 
+}
+
+void test_symbolsFallDown() {
+  Slot* s = initSlot(5, 5);
+  char gr[5][5] = {
+      {' ','#',' ','#','%'},
+      {'#',' ',' ','%','#'},
+      {'#',' ',' ','%','#'},
+      {'#','#',' ','%','#'},
+      {'#','#',' ',' ','%'}
+  };
+  char grGravity[5][5] = {
+      {' ',' ',' ',' ','%'},
+      {'#',' ',' ','#','#'},
+      {'#','#',' ','%','#'},
+      {'#','#',' ','%','#'},
+      {'#','#',' ','%','%'}
+  };
+
+  for (int i = 0; i < s->h; i++) {
+    for (int j = 0; j < s->w; j++) {
+      s->slotGrid[i][j].st.c = gr[i][j];
+    }
+  }
+
+  symbolsFallDown(s);
+
+  for (int i = 0; i < s->h; i++) {
+    for (int j = 0; j < s->h; j++) {
+      assertEq_char(s->slotGrid[i][j].st.c, grGravity[i][j], "Should be same symbols");
+    }
+  }
+
+  freeSlot(s);
 }
 
 void test_insertToStr() {
@@ -32,9 +66,10 @@ void test_insertToStr() {
 
 int main(int argc, char** argv) {
   makeTests(argv[0]);
-  addTestFunc(&test_columnDown);
-  addTestFunc(&test_getRandomSymbol);
-  addTestFunc(&test_insertToStr);
+  addTestFunc(test_columnDown);
+  addTestFunc(test_getRandomSymbol);
+  addTestFunc(test_insertToStr);
+  addTestFunc(test_symbolsFallDown);
   runTests();
   return 0;
 }
