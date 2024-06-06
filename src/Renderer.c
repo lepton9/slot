@@ -6,16 +6,14 @@
 #include <string.h>
 
 void renderGrid(FILE *s, symbol **grid, int w, int h) {
-  // assert(w*h*2 < 512);
-  size_t size = 2 * w * h;
+  size_t size = 2 * w * h + h;
   char op[size];
 
   memset(op, 0, size * sizeof(char));
 
   for (int i = 0; i < h; i++) {
     for (int j = 0; j < w; j++) {
-      char c[2] = {grid[i][j].st.c, '\0'};
-      strcat(op, c);
+      strcat(op, &grid[i][j].st.c);
       strcat(op, " ");
     }
     strcat(op, "\n");

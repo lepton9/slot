@@ -1,11 +1,11 @@
 DONE:
-- make the bonus
 
 TODO:
 
 - better memory allocation
     - change the symbols only by the symbolTemplates
     - pointers to symbolTemplate in symbol
+- different thread for key input to control the slot
 - save player to file and parse the file at start
 - change the symbol probabilities
 - make buffer for output and make updating more efficient
