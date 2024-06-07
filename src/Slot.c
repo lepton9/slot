@@ -193,7 +193,7 @@ Slot* initSlot(int w, int h) {
   s->alias = initialize(ps, SYMBOL_AMOUNT);
   s->aliasBonus = initialize(pBonus, SYMBOL_AMOUNT);
 
-  s->player = initPlayer(1000);
+  s->player = loadPlayer();
 
   return s;
 }
@@ -304,6 +304,7 @@ void bonusMode(Slot* s) {
     usleep(500000);
   }
 
+  addToLb(s->player, calcMultiplyer(s->currentWinAm, s->betAmountCurrent));
   clearLines(s->h+2, 1);
   s->bonus = false;
 }
@@ -404,6 +405,7 @@ void run(Slot* s) {
   while(!s->exitFlag) {
     update(s);
   }
+  savePlayer(s->player);
   freeSlot(s);
   // free(s);
 }

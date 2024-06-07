@@ -126,5 +126,9 @@ double calcReturn(groups* grps, const double bet) {
   return amount;
 }
 
+double calcMultiplyer(const double win, const double bet) {
+  return win/bet;
+}
+
 
 

@@ -41,6 +41,7 @@ int countSymbolsCol(symbol** grid, int h, int column, char symbol);
 double calcGroupMulti(group* g);
 double calcReturnGroup(group* g, const double bet);
 double calcReturn(groups* grps, const double bet);
+double calcMultiplyer(const double win, const double bet);
 
 #endif
 
