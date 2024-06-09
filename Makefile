@@ -7,7 +7,7 @@ LINK := -lm -lncurses
 CC := gcc
 
 TESTS := ./tests
-TEST_TARGETS := AliasTable_test LineChecker_test Slot_test
+TEST_TARGETS := AliasTable_test LineChecker_test Slot_test Player_test
 
 OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o
 

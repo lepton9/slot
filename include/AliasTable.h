@@ -9,7 +9,7 @@ typedef struct {
   int* alias;
 } AliasTable;
 
-AliasTable* initialize(double* p, size_t n);
+AliasTable* initialize(const double* p, const size_t n);
 int randAlias(AliasTable* at);
 double drand (double s, double e);
 void freeAlias(AliasTable* at);

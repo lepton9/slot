@@ -1,6 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <stdio.h>
+
 #define PLAYER_FILENAME "slot_player.txt"
 #define MAX_LEADERBOARD 100
 
@@ -23,5 +25,6 @@ const char* playerInfo(Player* p);
 int addToLb(Player *p, double multi);
 Player* loadPlayer();
 char savePlayer(Player* p);
+void printMultiLB(FILE* file, Player* p);
 
 #endif

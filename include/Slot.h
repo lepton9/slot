@@ -11,17 +11,13 @@
 #define SLOT_WIDTH 10
 #define SLOT_HEIGHT 10
 #define BONUS_MIN 3
+#define BONUS_BUY_MULTI 100
 #define FREESPINS_BEGIN 10
 #define FREESPINS_GAIN 5
 #define MIN_BET 10
 #define MAX_BET 1000
 #define BET_INCREMENT 10
 #define SYMBOL_AMOUNT 8
-
-typedef struct {
-  char c;
-  int prob;
-} t;
 
 typedef struct {
   Player *player;
@@ -74,11 +70,15 @@ void update(Slot *s);
 void run(Slot *s);
 void exitSlot(Slot *s);
 void printUI(Slot *s);
+void printSymbolInfo(Slot *s);
+void printLeaderboard(Slot *s);
 
 void setPlayer(Slot *s, Player *p);
 void increaseBetAmount(Slot *s);
 void lowerBetAmount(Slot *s);
 char setBet(Slot *s);
 void toggleTurboMode(Slot *s);
+char buyBonus(Slot *s);
+char confirmBonusBuy(Slot *s);
 
 #endif

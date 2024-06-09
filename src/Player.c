@@ -1,7 +1,4 @@
 #include "../include/Player.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 Player *initPlayer(double bal) {
@@ -49,7 +46,7 @@ const char *playerInfo(Player *p) {
 int addToLb(Player *p, double multi) {
   for (int i = 0; i < p->lbN; i++) {
     if (multi > p->bestBonusMulti[i]) {
-      for (int j = p->lbN; j > i + 1; j--) {
+      for (int j = p->lbN; j > i; j--) {
         if (j == MAX_LEADERBOARD - 1)
           continue;
         p->bestBonusMulti[j] = p->bestBonusMulti[j - 1];
@@ -90,8 +87,8 @@ Player *loadPlayer() {
         p->bestBonusMulti[p->lbN++] = multi;
       }
     }
+    fclose(file);
   }
-  fclose(file);
   return p;
 }
 
@@ -105,11 +102,16 @@ char savePlayer(Player *p) {
   fprintf(file, "spins: %d\n", p->totalSpins);
   fprintf(file, "bonuses: %d\n", p->bonusAmount);
   fprintf(file, "lastbonus: %d\n", p->lastBonus);
-  fprintf(file, "\n-----Best multiplyers-----\n");
-  for (int i = 0; i < p->lbN; i++) {
-    fprintf(file, "%d: %lf x\n", i + 1, p->bestBonusMulti[i]);
-  }
+  fprintf(file, "\n-----Best multipliers-----\n");
+  printMultiLB(file, p);
   fclose(file);
 
   return 1;
 }
+
+void printMultiLB(FILE* file, Player* p) {
+  for (int i = 0; i < p->lbN; i++) {
+    fprintf(file, "%d: %lf x\n", i + 1, p->bestBonusMulti[i]);
+  }
+}
+

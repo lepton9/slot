@@ -15,7 +15,6 @@
 #endif
 
 
-
 void setPlayer(Slot* s, Player* p) {
   if (p) s->player = p;
 }
@@ -57,7 +56,7 @@ void animateSpin(Slot* s) {
 }
 
 void animateColumn(Slot* s, int column) {
-  int am = (s->turboMode && !s->bonus) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 30 : 10;
+  int am = (s->turboMode && !s->bonus) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 20 : 10;
   spinColumn(s, column);
   for (int i = 0; i < am; i++) {
     for (int col = column; col < s->w; col++) columnDown(s, col);
@@ -68,7 +67,7 @@ void animateColumn(Slot* s, int column) {
 
 void animateBlankSymbColumn(Slot* s, int column, int blanks) {
   if (blanks <= 0) return;
-  int am = (s->turboMode) ? 1 : (s->bonusSymbols == BONUS_MIN - 1) ? 30 : 10;
+  int am = (s->turboMode && !s->bonus) ? 1 : 10;
   for (int i = 0; i < blanks; i++) {
     s->slotGrid[i][column] = getRandomSymbol(s);
   }
@@ -168,9 +167,9 @@ Slot* initSlot(int w, int h) {
     {'W',  0,   0,    0, 0.05 }, 
     {'#', 32, 0.2,  1.1, 0.25 }, 
     {'&', 33, 0.2, 1.25, 0.21 }, 
-    {'*', 34, 0.3,  1.5, 0.17 },
+    {'*', 34, 0.3,  1.4, 0.17 },
     {'%', 35, 0.4,  1.5, 0.14 },
-    {'@', 36, 0.5,  1.5, 0.10 },
+    {'@', 36, 0.5,  1.6, 0.10 },
     {'?', 91, 0.7, 1.75, 0.075}
   };
   memcpy(s->allSymbols, smbs, sizeof(smbs));
@@ -184,9 +183,9 @@ Slot* initSlot(int w, int h) {
     double sumBonus = 0.0;
     for (int i = 0; i < SYMBOL_AMOUNT; i++) sum += ps[i];
     for (int i = 0; i < SYMBOL_AMOUNT; i++) sumBonus += pBonus[i];
-    printf("sum: %f\n", sum);
+    // printf("sum: %f\n", sum);
     assert(fabs(sum - 1.0) < 0.000001);
-    printf("sumBonus: %f\n", sumBonus);
+    // printf("sumBonus: %f\n", sumBonus);
     assert(fabs(sumBonus - 1.0) < 0.000001);
   }
 
@@ -284,7 +283,7 @@ void bonusMode(Slot* s) {
   if (s->bonusSymbols > BONUS_MIN) s->freeSpins += FREESPINS_GAIN;
   cursorTo(s->h+1, 1);
   printf("\033[2KBONUS! %d free spins won!\n", s->freeSpins);
-  usleep(5000000);
+  usleep(2000000);
   printf("\033[2KPress 'b' to start bonus!\n");
   char c;
   while ((c = keyPress(s)) != 'b') {
@@ -337,19 +336,25 @@ char spinSlot(Slot* s) {
 }
 
 void printSymbolInfo(Slot* s) {
-  fprintf(stdout, "\nSymbol : Probability\n");
+  fprintf(stdout, "\033[0J\nSymbol : Probability\n");
   for (int i = 0; i < SYMBOL_AMOUNT; i++) {
     symbolTemplate sym = s->allSymbols[i];
     fprintf(stdout, "\033[%dm%c\033[0m : %0.3f\n", sym.colorGroup, sym.c, sym.probability);
   }
 }
 
+void printLeaderboard(Slot* s) {
+  fprintf(stdout, "\033[0J\nBest multipliers:\n");
+  printMultiLB(stdout, s->player);
+}
+
 void printUI(Slot* s) {
-  cursorTo(s->h + 3, 1);
+  cursorTo(s->h + 4, 1);
   const char* info = playerInfo(s->player);
   fprintf(stdout, "%s", info);
-  fprintf(stdout, "Bet: %.2f | Turbo mode: %s\033[0K\n", s->betAmountCurrent, (s->turboMode) ? "\033[32mON\033[0m" : "\033[31mOFF\033[0m");
-  fprintf(stdout, "\n| Spin: <space> | +Bet: <w> | -Bet: <s> | Turbo: <t> | Help: <h> | Quit: <q> |\n");
+  fprintf(stdout, "Bet: %.2f | Bonus price: %.2f | Turbo mode: %s\033[0K\n", s->betAmountCurrent, s->betAmountCurrent * BONUS_BUY_MULTI, (s->turboMode) ? "\033[32mON\033[0m" : "\033[31mOFF\033[0m");
+  fprintf(stdout, "\n| Spin: <space> | +Bet: <w> | -Bet: <s> | Buy bonus: <b> | Turbo: <t> |\n");
+  fprintf(stdout, "| Leaderboard: <l> | Help: <h> | Clear: <c> | Quit: <q> |\n");
   free((void*)info);
 }
 
@@ -360,6 +365,31 @@ char keyPress(Slot* s) {
   refresh();
   endwin();
   return c;
+}
+
+char buyBonus(Slot* s) {
+  char betMade = makeBet(s->player, s->betAmountCurrent * BONUS_BUY_MULTI);
+  if (!betMade) return 0;
+  s->currentWinAm = 0.0;
+
+  clearLines(s->h+1, 1);
+  printUI(s);
+  addSpin(s->player, 1);
+  bonusMode(s);
+  cursorTo(s->h+1, 1);
+  printf("\033[2KTotal won: %.2f\n", s->currentWinAm);
+  addWinnings(s->player, s->currentWinAm);
+  return 1;
+}
+
+char confirmBonusBuy(Slot* s) {
+  char c;
+  fprintf(stdout, "\033[0J");
+  printf("Buy bonus for %.2f? [y/n]", s->betAmountCurrent * BONUS_BUY_MULTI);
+  fflush(stdout);
+  while ((c = keyPress(s)) && c != 'y' && c != 'n') continue;
+  fprintf(stdout, "\033[2K");
+  return (c == 'y') ? 1 : 0;
 }
 
 void handleKeyPress(Slot* s, const char c) {
@@ -376,8 +406,18 @@ void handleKeyPress(Slot* s, const char c) {
     case 't':
       toggleTurboMode(s);
       break;
+    case 'b':
+      if (!confirmBonusBuy(s)) break;
+      if (!buyBonus(s)) fprintf(stdout, "Not enough money to buy bonus\n");
+      break;
     case 'h':
       printSymbolInfo(s);
+      break;
+    case 'l':
+      printLeaderboard(s);
+      break;
+    case 'c':
+      fprintf(stdout, "\033[0J");
       break;
     case 32:
       if (!spinSlot(s)) fprintf(stdout, "Bet amount too large\n");
