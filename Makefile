@@ -9,9 +9,9 @@ CC := gcc
 TESTS := ./tests
 TEST_TARGETS := AliasTable_test LineChecker_test Slot_test Player_test
 
-OBJ := ./objs/Slot.o ./objs/Renderer.o ./objs/LineChecker.o ./objs/Player.o ./objs/AliasTable.o
+OBJ := Slot Renderer LineChecker Player AliasTable
 
-main: $(OBJ)
+main: $(addprefix $(OBJS)/,$(addsuffix .o,$(OBJ)))
 	$(CC) $^ $(SRC)/main.c -o $(BIN)/$@ $(LINK)
 
 $(OBJS)/%.o: $(SRC)/%.c
